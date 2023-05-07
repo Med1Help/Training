@@ -2,10 +2,13 @@
 
 {% block content %}
 
-    <h1>Hoome Page</h1>
+    <h1>Hoome Page <small><a href="{% url 'create_room' %}" >Creat Room</a></small></h1>
 
     {% for room in rooms %}
-     <h3>{{room.id}}---<a href="/room/{{room.id}}">{{room.name}}</a></h3>
+     <span>@{{room.host}}</span>
+     <h3><a href=" {% url 'update-room' room.id %} ">edit---</a> <a href="{% url 'room' room.id%}">{{room.name}}</a></h3><a href=" {% url 'delete-room' room.id %} ">delete</a>
+     <small>{{room.topic}}</small>
+     <hr>
     {% endfor %}
 
 {% endblock content %}
