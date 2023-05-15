@@ -5,8 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate,login,logout
-from .models import Room ,Topic
-from .forms import RoomForm 
+from .models import Room, Topic, Message
+from .forms import RoomForm, MessageForm 
 from .RoomCrud import RoomCrud
 from  django.contrib.auth.forms import UserCreationForm
 
@@ -58,27 +58,45 @@ def home(request):
             Q(name__contains = q) |
             Q(description__contains = q)
                                       )
+        recent_messages = Message.objects.filter(
+        Q(room__topic__name__contains=q)
+        )
     else:
         rooms   = Room.objects.all()
-    topics  = Topic.objects.all() 
-    return render(request,'myapp/home.html',{'rooms':rooms , 'topics' : topics})
+        recent_messages = Message.objects.all()
+    topics          = Topic.objects.all() 
+    
+    return render(request,'myapp/home.html',{'rooms':rooms , 'topics' : topics , 'recent_messages':recent_messages})
 
 def room(request,id):
     rooms = Room.objects.all()
+    form = MessageForm()
     for i in rooms:
         if i.id == int(id) :
-            room = i
-
-    return render(request,'myapp/room.html',{'room':room})
+            room = i   
+    if request.method == 'POST':
+        message = Message.objects.create(
+            user = request.user,
+            room = room,
+            body = request.POST.get('body')
+        )
+        room.participants.add(request.user)
+        return redirect('room',room.id)
+    participants  = room.participants.all()
+    room_messages = room.message_set.all()          
+    context = {'room':room,'room_messages':room_messages,'participants':participants}
+    return render(request,'myapp/room.html',context)
 
 @login_required(login_url='login_view')
 def createRoom(request):
     form    = RoomForm()
     if(request.method == 'POST'):
         form = RoomForm(request.POST)
-        check = RoomCrud.saveRoom(form)
-        if(check):
-           return redirect('home')
+        if form.is_valid():
+            room = form.save(commit = False)
+            room.host = request.user
+            room.save()
+            return redirect('home')
 
     context = {'form':form}
     return render(request,'myapp/room_form.html',context=context)
@@ -106,5 +124,30 @@ def deleteRoom(request,roomId):
     if request.method == 'POST':
         room.delete()
         return redirect('home')
-    context = {'room' : room}
+    context = {'obj' : room}
     return render(request,'myapp/delete.html',context)
+
+@login_required(login_url='login_view')
+def deleteMessage(request,messageId):
+    message = Message.objects.get(id=messageId)
+    if request.user != message.user:
+        return HttpResponse('You are not allowed to update this room !! ')
+    if request.method == 'POST':
+        message.delete()
+        return redirect('home')
+    context = {'obj' : message}
+    return render(request,'myapp/delete.html',context)
+
+def profileView(req,profileId):
+    user          =  User.objects.get(id=profileId)
+    user_rooms    =  Room.objects.filter(Q(host=profileId))
+    topics        =  Topic.objects.all()
+    room_messages =  user.message_set.all()
+    context       = {
+        'profile_user':user ,
+        'rooms' : user_rooms,
+        'topics' : topics,
+        'room_messages' : room_messages
+        }
+    return render(req,'myapp/profile.html',context)
+

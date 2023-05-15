@@ -5,8 +5,7 @@
     <form method="POST" action="" >
         {% csrf_token %}
         are you sure you wanna delete 
-        {{room.id}}
-        <input type="text" value="{{room.id}}"/>
+        {{obj}}
         <input type="submit" value="Delete"/>
     </form>
 </div>

@@ -4,6 +4,7 @@ from .forms import RoomForm
 class RoomCrud:
     def saveRoom(room):
         if room.is_valid():
-            room.save()
+            room = room.save(commit = False)
+            
             return True
         return False
