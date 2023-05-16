@@ -6,6 +6,7 @@
 
 
   <main class="profile-page layout layout--3">
+   
     <div class="container">
       <!-- Topics Start -->
       <div class="topics">
@@ -42,6 +43,26 @@
 
       <!-- Room List Start -->
       <div>
+        <div class="roomListRoom">
+            {% if request.user.is_authenticated %}
+            <div class="profile__info">
+                <div class="avatar avatar--medium active">
+                    <img src="https://randomuser.me/api/portraits/men/37.jpg" />
+                  </div>
+                <h3>{{request.user}}</h3>
+                <p>@{{request.user}}</p>
+                <a href="{%  url 'update-user' %}" class="btn btn--main btn--pill">Edit Profile</a>
+            </div>
+            <div class="profile__about">
+                <h3>About</h3>
+                <p>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequuntur illo tenetur
+                facilis sunt nemo debitis quisquam hic atque aut? Ducimus alias placeat optio
+                accusamus repudiandae quis ab ex exercitationem rem?
+                </p>
+            </div>
+            {% endif %}
+        </div>
         {% for room in rooms %}  
           <div class="roomListRoom">
             <div class="roomListRoom__header">

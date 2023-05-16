@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate,login,logout
 from .models import Room, Topic, Message
-from .forms import RoomForm, MessageForm 
+from .forms import RoomForm, MessageForm ,UserForm
 from .RoomCrud import RoomCrud
 from  django.contrib.auth.forms import UserCreationForm
 
@@ -45,9 +45,23 @@ def signupView(req):
             login(req,user)
             return redirect('home')
         else:
+            print(form)
             messages.error(req,'An error occurred during registration')
     context = {'form': form}
     return render(req,'myapp/signup_form.html',context)
+
+@login_required(login_url='login_view')
+def update_user(req):
+    user = req.user
+    form = UserForm(instance=user)
+    if req.method == 'POST':
+        form = UserForm(req.POST,instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('user-profile',user.id)  
+
+    context = {'form':form}
+    return render(req,'myapp/update_user.html',context)
 
 def home(request):
     rooms   = None
@@ -151,3 +165,11 @@ def profileView(req,profileId):
         }
     return render(req,'myapp/profile.html',context)
 
+def topics(req):
+    topics = Topic.objects.all()
+    context = {'topics':topics}
+    return render(req,'myapp/topics.html',context)
+def activities(req):
+    activities = Message.objects.all()
+    context = {'recent_messages':activities}
+    return render(req,'myapp/activity.html',context)
